@@ -28,7 +28,9 @@ class TestRunTask:
         assert data["status"] == "received"
         assert "task_id" in data
         assert "result" in data
-        assert data["result"]["note"] == "Lyra Phase 1 placeholder"
+        # Phase 2: Updated response includes tool guidance
+        assert "note" in data["result"]
+        assert "available_tools" in data["result"]
 
     def test_run_task_with_empty_payload(self, client):
         """Test run_task with empty payload."""

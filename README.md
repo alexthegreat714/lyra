@@ -2,56 +2,72 @@
 
 Lyra is a creative strategist and conceptual reframing agent designed to assist with innovative thinking, idea generation, and creative problem-solving within a multi-agent system.
 
-## Phase 1 - Foundation
+## Current Phase: Phase 2 - Creative Tools
 
-This is the Phase 1 implementation of the Lyra agent, which includes:
+This implementation includes the foundation from Phase 1 plus Lyra's creative toolset.
 
-- Project scaffolding and directory structure
-- FastAPI server with basic endpoints
-- Configuration system
-- Placeholder services and models
-- Basic test suite
+### Available Tools
 
-### Phase 1 Restrictions
+| Tool | Description |
+|------|-------------|
+| `divergence` | Generate 5-7 divergent conceptual angles from a prompt |
+| `convergence` | Distill multiple options into a core insight |
+| `analogies` | Produce 3-5 analogies from different domains |
+| `narratives` | Generate narrative scaffolds with structure and beats |
+| `counterfactuals` | Build structured what-if scenario analyses |
+| `tonemap` | Map conceptual tones (not emotional inference) |
 
-- No creative logic implementation
-- No tool integrations
-- No RAG (Retrieval-Augmented Generation) functionality
-- No reasoning patterns
-- No congress interface for multi-agent collaboration
+### Phase 2 Restrictions
 
-These features will be implemented in subsequent phases.
+This phase includes pure creative logic functions only:
+- No RAG querying
+- No memory writing
+- No legal checks or bias flags
+- No congress contributions
+- No Sky event logic
+- No persona or tone behavior
+- No creativity "pipeline"
+- No emotional modeling
 
 ## Project Structure
 
 ```
 lyra/
   app/
-    main.py           # Entry point
-    config.py         # Configuration and settings
-    server.py         # FastAPI application factory
+    main.py              # Entry point
+    config.py            # Configuration and settings
+    server.py            # FastAPI application factory
     routes/
       __init__.py
-      core.py         # Core API endpoints
+      core.py            # Core API endpoints
     models/
       __init__.py
-      schema.py       # Pydantic request/response models
+      schema.py          # Pydantic request/response models
     services/
       __init__.py
-      lyra_agent.py   # Base Lyra agent class
+      lyra_agent.py      # Lyra agent class with tool integration
+    tools/
+      __init__.py
+      divergence.py      # Divergent angle generation
+      convergence.py     # Option distillation
+      analogies.py       # Cross-domain analogies
+      narratives.py      # Narrative scaffolding
+      counterfactuals.py # What-if scenario analysis
+      tone_map.py        # Conceptual tone mapping
     memory/
-      short_term/     # Short-term memory storage
-      long_term/      # Long-term memory storage
+      short_term/        # Short-term memory storage (placeholder)
+      long_term/         # Long-term memory storage (placeholder)
     rag/
       __init__.py
-      ingest.py       # Document ingestion (placeholder)
-      embed.py        # Text embedding (placeholder)
-      query.py        # Knowledge retrieval (placeholder)
+      ingest.py          # Document ingestion (placeholder)
+      embed.py           # Text embedding (placeholder)
+      query.py           # Knowledge retrieval (placeholder)
     logs/
   tests/
     conftest.py
     test_routes.py
     test_health.py
+    test_tools.py        # Tool-specific tests
   README.md
   requirements.txt
 ```
@@ -110,11 +126,22 @@ Get the current status of the Lyra agent.
 ### POST /run_task
 Execute a task through the Lyra agent.
 
-**Request:**
+**Basic Request:**
 ```json
 {
   "task": "string",
   "payload": {}
+}
+```
+
+**Tool Invocation Request:**
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "divergence",
+    "args": {"prompt": "sustainable urban development"}
+  }
 }
 ```
 
@@ -123,7 +150,88 @@ Execute a task through the Lyra agent.
 {
   "status": "received",
   "task_id": "uuid",
-  "result": {}
+  "result": {
+    "result": [
+      {"angle": "Inversion", "description": "..."},
+      {"angle": "Scale Shift", "description": "..."}
+    ]
+  }
+}
+```
+
+### Tool Invocation Examples
+
+#### Divergence Tool
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "divergence",
+    "args": {"prompt": "remote work productivity"}
+  }
+}
+```
+
+#### Convergence Tool
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "convergence",
+    "args": {
+      "options": [
+        {"angle": "A", "description": "First perspective"},
+        {"angle": "B", "description": "Second perspective"}
+      ]
+    }
+  }
+}
+```
+
+#### Analogies Tool
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "analogies",
+    "args": {"concept": "organizational change"}
+  }
+}
+```
+
+#### Narratives Tool
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "narratives",
+    "args": {
+      "theme": "digital transformation",
+      "constraints": {"structure": "hero_journey"}
+    }
+  }
+}
+```
+
+#### Counterfactuals Tool
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "counterfactuals",
+    "args": {"scenario": "Company adopts AI-first strategy"}
+  }
+}
+```
+
+#### Tone Mapper Tool
+```json
+{
+  "task": "use_tool",
+  "payload": {
+    "tool": "tonemap",
+    "args": {"prompt": "Strategic technical implementation"}
+  }
 }
 ```
 
@@ -166,15 +274,49 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_health.py
+pytest tests/test_tools.py
+
+# Run tool tests only
+pytest tests/test_tools.py -v
 ```
 
-## Expected Future Phases
+## Tool Details
 
-### Phase 2 - Tools and Reasoning
-- Tool integrations for creative tasks
-- Basic reasoning patterns
-- Enhanced task processing
+### Divergence Tool
+Generates 5-7 divergent conceptual angles using different lenses:
+- Inversion, Scale Shift, Temporal, Cross-Domain
+- Constraint Removal, Stakeholder Shift, Abstraction
+- Materialization, Synthesis, Decomposition
+
+### Convergence Tool
+Distills multiple options into:
+- Core idea
+- Supporting points
+- Rationale
+
+### Analogies Tool
+Produces analogies from domains including:
+- Biology, Architecture, Music, Physics
+- Economics, Ecology, Cooking, Navigation
+- Gardening, Games
+
+### Narratives Tool
+Generates scaffolds with:
+- Premise, Conflicts, Structural beats
+- Resolution patterns
+- Supports: three_act, hero_journey, five_act, circular
+
+### Counterfactuals Tool
+Builds what-if analyses across dimensions:
+- Temporal, Magnitude, Actor, Method
+- Context, Constraint, Information, Motivation
+
+### Tone Mapper
+Maps conceptual tones (NOT emotional inference):
+- abstract, grounded, technical
+- whimsical, strategic, narrative
+
+## Expected Future Phases
 
 ### Phase 3 - Memory and Context
 - Short-term memory implementation
