@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.config import get_settings
-from app.routes import core, memory, congress
+from app.routes import core, memory, congress, protocol
 
 
 @asynccontextmanager
@@ -60,6 +60,7 @@ def create_app() -> FastAPI:
     app.include_router(core.router, tags=["core"])
     app.include_router(memory.router)  # Phase 4: Memory endpoints
     app.include_router(congress.router)  # Phase 5: Congress endpoints
+    app.include_router(protocol.router)  # Phase 6: Sky Protocol endpoints
 
     return app
 

@@ -2,11 +2,18 @@
 
 Lyra is a creative strategist and conceptual reframing agent designed to assist with innovative thinking, idea generation, and creative problem-solving within a multi-agent system.
 
-## Current Phase: Phase 5 - Congress Integration
+## Current Phase: Phase 6 - Sky Protocol
 
-This implementation includes Phases 1-4 plus Congress integration for multi-agent collaboration.
+This implementation includes Phases 1-5 plus Sky Protocol for inter-agent communication.
 
-### Phase 5 Features
+### Phase 6 Features
+
+- **Sky Protocol**: Message passing framework for Sky<->Lyra communication
+- **Task Routing**: Automatic task acceptance/deferral based on capabilities
+- **Registration & Heartbeat**: Agent registration and health monitoring
+- **Event Notifications**: Structured event communication
+
+### Phase 5 Features (Congress Integration)
 
 - **Voting Module**: Cast and track votes on Congress proposals
 - **Contribution Tracker**: Create and submit creative contributions
@@ -89,6 +96,7 @@ lyra/
       core.py            # Core API endpoints
       memory.py          # Memory API endpoints (Phase 4)
       congress.py        # Congress API endpoints (Phase 5)
+      protocol.py        # Sky Protocol endpoints (Phase 6)
     models/
       __init__.py
       schema.py          # Pydantic request/response models
@@ -110,6 +118,9 @@ lyra/
       voting.py          # Voting module
       contributions.py   # Contribution tracker
       bill_interface.py  # Bill analysis interface
+    protocol/              # Phase 6: Sky Protocol
+      __init__.py
+      sky_protocol.py    # Message passing framework
     memory/
       short_term/        # Short-term memory storage (placeholder)
       long_term/         # Long-term memory storage (Phase 4)
@@ -133,6 +144,7 @@ lyra/
     test_brain.py        # Brain/reasoning tests
     test_memory.py       # Memory/RAG tests (Phase 4)
     test_congress.py     # Congress integration tests (Phase 5)
+    test_protocol.py     # Sky Protocol tests (Phase 6)
   README.md
   requirements.txt
 ```
@@ -442,6 +454,65 @@ Get Congress participation status.
 }
 ```
 
+### POST /protocol/message (Phase 6)
+Process a Sky protocol message.
+
+**Request:**
+```json
+{
+  "type": "task_request",
+  "source": "sky",
+  "payload": {"task_type": "idea_generation", "prompt": "innovation strategies"}
+}
+```
+
+**Response:**
+```json
+{
+  "message_id": "uuid",
+  "type": "task_response",
+  "source": "lyra",
+  "destination": "sky",
+  "payload": {
+    "status": "accepted",
+    "task_id": "uuid",
+    "task_type": "idea_generation"
+  }
+}
+```
+
+### GET /protocol/capabilities (Phase 6)
+Get Lyra's advertised capabilities.
+
+**Response:**
+```json
+{
+  "type": "capability_response",
+  "payload": {
+    "agent": "lyra",
+    "capabilities": ["creative_strategy", "idea_generation", "narrative_design"],
+    "supported_tasks": ["idea_generation", "reframe", "narrative_design"],
+    "deferred_tasks": {"legal_analysis": "Sophia", "security_assessment": "Aegis"}
+  }
+}
+```
+
+### GET /protocol/status (Phase 6)
+Get protocol status.
+
+**Response:**
+```json
+{
+  "type": "status_response",
+  "payload": {
+    "agent": "lyra",
+    "status": "online",
+    "registered": false,
+    "capabilities": ["creative_strategy", "idea_generation"]
+  }
+}
+```
+
 ### POST /run_task
 Execute a task through the Lyra agent.
 
@@ -506,7 +577,10 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_congress.py
+pytest tests/test_protocol.py
+
+# Run protocol tests only
+pytest tests/test_protocol.py -v
 
 # Run Congress tests only
 pytest tests/test_congress.py -v
@@ -570,11 +644,6 @@ Phase 4 uses an HTTP embedding service (Ollama-compatible by default).
 When the embedding service is unavailable, a deterministic hash-based pseudo-embedding is used to prevent system crashes.
 
 ## Expected Future Phases
-
-### Phase 6 - Sky Protocol
-- Message passing framework
-- Event-driven communication
-- Coordination with Sky orchestrator
 
 ### Phase 7 - History Logging
 - Creative history logger
