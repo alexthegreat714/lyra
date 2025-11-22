@@ -28,9 +28,10 @@ class TestRunTask:
         assert data["status"] == "received"
         assert "task_id" in data
         assert "result" in data
-        # Phase 2: Updated response includes tool guidance
+        # Phase 3: Updated response includes tool and task type guidance
         assert "note" in data["result"]
         assert "available_tools" in data["result"]
+        assert "available_task_types" in data["result"]
 
     def test_run_task_with_empty_payload(self, client):
         """Test run_task with empty payload."""

@@ -2,6 +2,14 @@
 Lyra Agent Service
 
 Core agent class for the Lyra creative strategist agent.
+
+GUARDRAILS:
+    - No legal reasoning (Sophia only)
+    - No factual judgment (Veritas only)
+    - No compute/resource logic (Argus only)
+    - No health/social inference (Mercury)
+    - No emotional inference
+    - No "advice" style output, only structured creative constructs
 """
 
 from typing import Any, Dict, Optional
@@ -14,13 +22,14 @@ from app.tools.analogies import AnalogyTool
 from app.tools.narratives import NarrativeTool
 from app.tools.counterfactuals import CounterfactualTool
 from app.tools.tone_map import ToneMapper
+from app.services.lyra_brain import LyraBrain
 
 
 class LyraAgent:
     """
     Lyra Agent - Creative strategist and conceptual reframing agent.
 
-    Phase 2: Tool integrations for creative exploration.
+    Phase 3: Structured reasoning with LyraBrain integration.
     Available tools:
         - divergence: Generate divergent conceptual angles
         - convergence: Distill options into core insights
@@ -29,10 +38,26 @@ class LyraAgent:
         - counterfactuals: Construct what-if scenarios
         - tonemap: Map conceptual tones
 
+    Creative task types:
+        - idea_generation
+        - reframe
+        - narrative_design
+        - counterfactual_analysis
+        - analogy_exploration
+        - tone_mapping
+        - mixed_creative
+
     Future phases will implement:
         - RAG-based knowledge retrieval
-        - Reasoning patterns
         - Congress interface for multi-agent collaboration
+
+    GUARDRAILS:
+        - No legal reasoning (Sophia only)
+        - No factual judgment (Veritas only)
+        - No compute/resource logic (Argus only)
+        - No health/social inference (Mercury)
+        - No emotional inference
+        - No "advice" style output, only structured creative constructs
     """
 
     # Map of tool names to their methods
@@ -47,7 +72,7 @@ class LyraAgent:
 
     def __init__(self, settings):
         """
-        Initialize the Lyra agent with all creative tools.
+        Initialize the Lyra agent with all creative tools and brain.
 
         Args:
             settings: Application settings instance
@@ -62,7 +87,19 @@ class LyraAgent:
         self.counterfactuals = CounterfactualTool()
         self.tonemap = ToneMapper()
 
-        logger.info(f"LyraAgent initialized (v{settings.VERSION}) with creative tools")
+        # Phase 3: Initialize the reasoning brain with tool access
+        self.brain = LyraBrain(
+            tools={
+                "divergence": self.divergence,
+                "convergence": self.convergence,
+                "analogies": self.analogies,
+                "narratives": self.narratives,
+                "counterfactuals": self.counterfactuals,
+                "tonemap": self.tonemap,
+            }
+        )
+
+        logger.info(f"LyraAgent initialized (v{settings.VERSION}) with creative tools and brain")
 
     def run_task(self, task: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -77,23 +114,52 @@ class LyraAgent:
         """
         logger.info(f"Running task: {task}")
 
-        # Handle tool invocation task
+        # Phase 2: Handle direct tool invocation
         if task == "use_tool":
             tool_name = payload.get("tool")
             tool_args = payload.get("args", {})
             return self.use_tool(tool_name, tool_args)
 
+        # Phase 3: Handle creative brain task
+        if task == "creative_brain":
+            return self.run_creative_task(
+                task_type=payload.get("task_type", "mixed_creative"),
+                prompt=payload.get("prompt", ""),
+                context=payload.get("context"),
+            )
+
         # Default: return task info
         return {
-            "note": "Lyra Phase 2 - use task='use_tool' for tool access",
+            "note": "Lyra Phase 3 - use task='creative_brain' or 'use_tool'",
             "task_received": task,
             "payload_keys": list(payload.keys()) if payload else [],
             "available_tools": list(self.TOOL_REGISTRY.keys()),
+            "available_task_types": self.brain.get_supported_tasks(),
         }
+
+    def run_creative_task(
+        self,
+        task_type: str,
+        prompt: str,
+        context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Execute a creative task through the reasoning brain.
+
+        Args:
+            task_type: Type of creative task to perform
+            prompt: The input prompt to process
+            context: Optional context for the task
+
+        Returns:
+            Structured result from the brain's reasoning pipeline
+        """
+        logger.info(f"Running creative task: {task_type}")
+        return self.brain.process(task_type, prompt, context)
 
     def use_tool(self, tool_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Invoke a specific creative tool.
+        Invoke a specific creative tool directly.
 
         Args:
             tool_name: Name of the tool to use
@@ -182,6 +248,7 @@ class LyraAgent:
             "version": self.settings.VERSION,
             "ok": True,
             "tools_available": list(self.TOOL_REGISTRY.keys()),
+            "task_types_available": self.brain.get_supported_tasks(),
         }
 
     def get_available_tools(self) -> Dict[str, str]:
@@ -198,4 +265,21 @@ class LyraAgent:
             "narratives": "Generate narrative scaffolds with structure and beats",
             "counterfactuals": "Build structured what-if scenario analyses",
             "tonemap": "Map conceptual tones (not emotional inference)",
+        }
+
+    def get_available_task_types(self) -> Dict[str, str]:
+        """
+        Get information about available creative task types.
+
+        Returns:
+            Dict mapping task types to descriptions
+        """
+        return {
+            "idea_generation": "Generate and distill divergent ideas",
+            "reframe": "Analyze tone and reframe concepts",
+            "narrative_design": "Create narrative scaffolds and structures",
+            "counterfactual_analysis": "Explore what-if scenarios",
+            "analogy_exploration": "Generate cross-domain analogies",
+            "tone_mapping": "Map conceptual tones",
+            "mixed_creative": "Full creative pipeline with multiple tools",
         }

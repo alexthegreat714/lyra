@@ -4,9 +4,21 @@ Lyra Agent Schema Models
 Pydantic models for API request and response validation.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+
+# Phase 3: Supported creative task types
+LyraTaskType = Literal[
+    "idea_generation",
+    "reframe",
+    "narrative_design",
+    "counterfactual_analysis",
+    "analogy_exploration",
+    "tone_mapping",
+    "mixed_creative",
+]
 
 
 class TaskRequest(BaseModel):
@@ -56,3 +68,31 @@ class ShutdownResponse(BaseModel):
 
     status: str = Field(..., description="Shutdown status")
     message: str = Field(..., description="Shutdown message")
+
+
+# Phase 3: Creative Brain Models
+
+
+class CreativeTaskRequest(BaseModel):
+    """Request model for creative brain task execution."""
+
+    task_type: LyraTaskType = Field(
+        ..., description="Type of creative task to perform"
+    )
+    prompt: str = Field(..., description="The input prompt to process")
+    context: Optional[Dict[str, Any]] = Field(
+        default=None, description="Optional context for the task"
+    )
+
+
+class CreativeTaskResponse(BaseModel):
+    """Response model for creative brain task execution."""
+
+    task_type: str = Field(..., description="The executed task type")
+    prompt: str = Field(..., description="The original prompt")
+    result: Dict[str, Any] = Field(
+        ..., description="Synthesized result from the reasoning pipeline"
+    )
+    steps: List[Dict[str, Any]] = Field(
+        ..., description="List of pipeline stages executed"
+    )

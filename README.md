@@ -2,9 +2,31 @@
 
 Lyra is a creative strategist and conceptual reframing agent designed to assist with innovative thinking, idea generation, and creative problem-solving within a multi-agent system.
 
-## Current Phase: Phase 2 - Creative Tools
+## Current Phase: Phase 3 - Reasoning Engine
 
-This implementation includes the foundation from Phase 1 plus Lyra's creative toolset.
+This implementation includes the foundation from Phases 1-2 plus the LyraBrain structured reasoning engine.
+
+### LyraBrain - Structured Reasoning
+
+LyraBrain is Lyra's internal reasoning engine that provides deterministic, inspectable creative processing through a 5-stage pipeline:
+
+1. **Interpretation** - Analyze input characteristics
+2. **Objective Classification** - Determine task type
+3. **Tool Plan Selection** - Choose appropriate tools
+4. **Tool Execution** - Run tools in sequence
+5. **Synthesis** - Combine results into structured output
+
+### Available Creative Task Types
+
+| Task Type | Tools Used | Description |
+|-----------|------------|-------------|
+| `idea_generation` | divergence → convergence | Generate and distill divergent ideas |
+| `reframe` | tonemap → divergence → convergence | Analyze tone and reframe concepts |
+| `narrative_design` | narratives | Create narrative scaffolds |
+| `counterfactual_analysis` | counterfactuals → convergence | Explore what-if scenarios |
+| `analogy_exploration` | analogies | Generate cross-domain analogies |
+| `tone_mapping` | tonemap | Map conceptual tones |
+| `mixed_creative` | divergence → analogies → narratives → convergence | Full creative pipeline |
 
 ### Available Tools
 
@@ -17,17 +39,17 @@ This implementation includes the foundation from Phase 1 plus Lyra's creative to
 | `counterfactuals` | Build structured what-if scenario analyses |
 | `tonemap` | Map conceptual tones (not emotional inference) |
 
-### Phase 2 Restrictions
+### Phase 3 Notes
 
-This phase includes pure creative logic functions only:
-- No RAG querying
-- No memory writing
-- No legal checks or bias flags
-- No congress contributions
-- No Sky event logic
-- No persona or tone behavior
-- No creativity "pipeline"
-- No emotional modeling
+Phase 3 adds structured reasoning, NOT memory or RAG.
+
+**Guardrails:**
+- No legal reasoning (Sophia only)
+- No factual judgment (Veritas only)
+- No compute/resource logic (Argus only)
+- No health/social inference (Mercury)
+- No emotional inference
+- No "advice" style output, only structured creative constructs
 
 ## Project Structure
 
@@ -45,7 +67,8 @@ lyra/
       schema.py          # Pydantic request/response models
     services/
       __init__.py
-      lyra_agent.py      # Lyra agent class with tool integration
+      lyra_agent.py      # Lyra agent class with tool/brain integration
+      lyra_brain.py      # LyraBrain reasoning engine
     tools/
       __init__.py
       divergence.py      # Divergent angle generation
@@ -68,6 +91,7 @@ lyra/
     test_routes.py
     test_health.py
     test_tools.py        # Tool-specific tests
+    test_brain.py        # Brain/reasoning tests
   README.md
   requirements.txt
 ```
@@ -123,14 +147,50 @@ Get the current status of the Lyra agent.
 }
 ```
 
+### POST /creative_brain (Phase 3)
+Execute a creative task through the reasoning brain.
+
+**Request:**
+```json
+{
+  "task_type": "idea_generation",
+  "prompt": "sustainable innovation strategies",
+  "context": {"optional": "context data"}
+}
+```
+
+**Response:**
+```json
+{
+  "task_type": "idea_generation",
+  "prompt": "sustainable innovation strategies",
+  "result": {
+    "summary": "Synthesized output for idea_generation",
+    "primary_insights": ["divergence", "convergence"],
+    "options": [...],
+    "distilled": {...}
+  },
+  "steps": [
+    {"stage": "interpretation", "data": {...}},
+    {"stage": "objective_classification", "data": {...}},
+    {"stage": "tool_plan", "data": {...}},
+    {"stage": "tool_execution", "data": {...}},
+    {"stage": "synthesis", "data": {...}}
+  ]
+}
+```
+
 ### POST /run_task
 Execute a task through the Lyra agent.
 
-**Basic Request:**
+**Creative Brain via run_task:**
 ```json
 {
-  "task": "string",
-  "payload": {}
+  "task": "creative_brain",
+  "payload": {
+    "task_type": "narrative_design",
+    "prompt": "digital transformation journey"
+  }
 }
 ```
 
@@ -145,17 +205,54 @@ Execute a task through the Lyra agent.
 }
 ```
 
-**Response:**
+### Creative Brain Examples
+
+#### Idea Generation
 ```json
 {
-  "status": "received",
-  "task_id": "uuid",
-  "result": {
-    "result": [
-      {"angle": "Inversion", "description": "..."},
-      {"angle": "Scale Shift", "description": "..."}
-    ]
-  }
+  "task_type": "idea_generation",
+  "prompt": "remote work productivity"
+}
+```
+
+#### Narrative Design
+```json
+{
+  "task_type": "narrative_design",
+  "prompt": "digital transformation",
+  "context": {"structure": "hero_journey"}
+}
+```
+
+#### Counterfactual Analysis
+```json
+{
+  "task_type": "counterfactual_analysis",
+  "prompt": "Company adopts AI-first strategy"
+}
+```
+
+#### Analogy Exploration
+```json
+{
+  "task_type": "analogy_exploration",
+  "prompt": "organizational change management"
+}
+```
+
+#### Tone Mapping
+```json
+{
+  "task_type": "tone_mapping",
+  "prompt": "strategic technical implementation"
+}
+```
+
+#### Mixed Creative (Full Pipeline)
+```json
+{
+  "task_type": "mixed_creative",
+  "prompt": "future of sustainable cities"
 }
 ```
 
@@ -184,53 +281,6 @@ Execute a task through the Lyra agent.
         {"angle": "B", "description": "Second perspective"}
       ]
     }
-  }
-}
-```
-
-#### Analogies Tool
-```json
-{
-  "task": "use_tool",
-  "payload": {
-    "tool": "analogies",
-    "args": {"concept": "organizational change"}
-  }
-}
-```
-
-#### Narratives Tool
-```json
-{
-  "task": "use_tool",
-  "payload": {
-    "tool": "narratives",
-    "args": {
-      "theme": "digital transformation",
-      "constraints": {"structure": "hero_journey"}
-    }
-  }
-}
-```
-
-#### Counterfactuals Tool
-```json
-{
-  "task": "use_tool",
-  "payload": {
-    "tool": "counterfactuals",
-    "args": {"scenario": "Company adopts AI-first strategy"}
-  }
-}
-```
-
-#### Tone Mapper Tool
-```json
-{
-  "task": "use_tool",
-  "payload": {
-    "tool": "tonemap",
-    "args": {"prompt": "Strategic technical implementation"}
   }
 }
 ```
@@ -274,7 +324,10 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_tools.py
+pytest tests/test_brain.py
+
+# Run brain tests only
+pytest tests/test_brain.py -v
 
 # Run tool tests only
 pytest tests/test_tools.py -v
@@ -318,17 +371,17 @@ Maps conceptual tones (NOT emotional inference):
 
 ## Expected Future Phases
 
-### Phase 3 - Memory and Context
-- Short-term memory implementation
-- Long-term memory storage
-- Context management
-
 ### Phase 4 - RAG Integration
 - Document ingestion pipeline
 - Text embedding system
 - Knowledge retrieval and querying
 
-### Phase 5 - Congress Interface
+### Phase 5 - Memory and Context
+- Short-term memory implementation
+- Long-term memory storage
+- Context management
+
+### Phase 6 - Congress Interface
 - Multi-agent collaboration
 - Event-driven communication
 - Coordination with Sky orchestrator

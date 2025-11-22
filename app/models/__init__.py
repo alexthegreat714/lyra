@@ -11,6 +11,10 @@ from app.models.schema import (
     EventResponse,
     StatusResponse,
     ShutdownResponse,
+    # Phase 3: Creative Brain Models
+    LyraTaskType,
+    CreativeTaskRequest,
+    CreativeTaskResponse,
 )
 
 __all__ = [
@@ -20,4 +24,7 @@ __all__ = [
     "EventResponse",
     "StatusResponse",
     "ShutdownResponse",
+    "LyraTaskType",
+    "CreativeTaskRequest",
+    "CreativeTaskResponse",
 ]
