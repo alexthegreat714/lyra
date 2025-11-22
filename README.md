@@ -2,31 +2,51 @@
 
 Lyra is a creative strategist and conceptual reframing agent designed to assist with innovative thinking, idea generation, and creative problem-solving within a multi-agent system.
 
-## Current Phase: Phase 3 - Reasoning Engine
+## Current Phase: Phase 4 - RAG + Memory Integration
 
-This implementation includes the foundation from Phases 1-2 plus the LyraBrain structured reasoning engine.
+This implementation includes Phases 1-3 plus long-term memory with RAG capabilities.
 
-### LyraBrain - Structured Reasoning
+### Phase 4 Features
 
-LyraBrain is Lyra's internal reasoning engine that provides deterministic, inspectable creative processing through a 5-stage pipeline:
+- **File-backed Long-term Memory**: JSON storage under `memory/long_term/`
+- **Text Embeddings**: HTTP client for embedding service (Ollama-compatible)
+- **Semantic Search**: Cosine similarity-based retrieval
+- **Memory Categories**: themes, narratives, styles, user_preferences, creative_history, motifs
+- **Memory-aware Brain**: LyraBrain now retrieves relevant context during reasoning
+
+### LyraBrain - Structured Reasoning (Phase 3+4)
+
+LyraBrain is Lyra's internal reasoning engine with a 6-stage pipeline:
 
 1. **Interpretation** - Analyze input characteristics
 2. **Objective Classification** - Determine task type
-3. **Tool Plan Selection** - Choose appropriate tools
-4. **Tool Execution** - Run tools in sequence
-5. **Synthesis** - Combine results into structured output
+3. **Memory Retrieval** - Fetch relevant context (Phase 4)
+4. **Tool Plan Selection** - Choose appropriate tools
+5. **Tool Execution** - Run tools in sequence
+6. **Synthesis** - Combine results into structured output
+
+### Memory Categories
+
+| Category | Description |
+|----------|-------------|
+| `themes` | Core themes and concepts explored |
+| `narratives` | Narrative structures and story elements |
+| `styles` | Creative styles and approaches |
+| `user_preferences` | User-specific preferences and patterns |
+| `creative_history` | History of creative outputs |
+| `motifs` | Recurring motifs and patterns |
 
 ### Available Creative Task Types
 
-| Task Type | Tools Used | Description |
-|-----------|------------|-------------|
-| `idea_generation` | divergence → convergence | Generate and distill divergent ideas |
-| `reframe` | tonemap → divergence → convergence | Analyze tone and reframe concepts |
-| `narrative_design` | narratives | Create narrative scaffolds |
-| `counterfactual_analysis` | counterfactuals → convergence | Explore what-if scenarios |
-| `analogy_exploration` | analogies | Generate cross-domain analogies |
-| `tone_mapping` | tonemap | Map conceptual tones |
-| `mixed_creative` | divergence → analogies → narratives → convergence | Full creative pipeline |
+| Task Type | Tools Used | Memory Categories |
+|-----------|------------|-------------------|
+| `idea_generation` | divergence → convergence | themes, creative_history, motifs |
+| `reframe` | tonemap → divergence → convergence | themes, styles, creative_history |
+| `narrative_design` | narratives | narratives, themes, motifs |
+| `counterfactual_analysis` | counterfactuals → convergence | themes, narratives |
+| `analogy_exploration` | analogies | motifs, themes, styles |
+| `tone_mapping` | tonemap | styles, themes |
+| `mixed_creative` | divergence → analogies → narratives → convergence | all categories |
 
 ### Available Tools
 
@@ -39,17 +59,15 @@ LyraBrain is Lyra's internal reasoning engine that provides deterministic, inspe
 | `counterfactuals` | Build structured what-if scenario analyses |
 | `tonemap` | Map conceptual tones (not emotional inference) |
 
-### Phase 3 Notes
+### Guardrails
 
-Phase 3 adds structured reasoning, NOT memory or RAG.
-
-**Guardrails:**
 - No legal reasoning (Sophia only)
 - No factual judgment (Veritas only)
 - No compute/resource logic (Argus only)
 - No health/social inference (Mercury)
 - No emotional inference
 - No "advice" style output, only structured creative constructs
+- Memory is for creative context only - no cross-agent data
 
 ## Project Structure
 
@@ -62,13 +80,15 @@ lyra/
     routes/
       __init__.py
       core.py            # Core API endpoints
+      memory.py          # Memory API endpoints (Phase 4)
     models/
       __init__.py
       schema.py          # Pydantic request/response models
     services/
       __init__.py
-      lyra_agent.py      # Lyra agent class with tool/brain integration
-      lyra_brain.py      # LyraBrain reasoning engine
+      lyra_agent.py      # Lyra agent class with tool/brain/memory integration
+      lyra_brain.py      # LyraBrain reasoning engine with memory retrieval
+      memory_manager.py  # Memory manager service (Phase 4)
     tools/
       __init__.py
       divergence.py      # Divergent angle generation
@@ -79,12 +99,18 @@ lyra/
       tone_map.py        # Conceptual tone mapping
     memory/
       short_term/        # Short-term memory storage (placeholder)
-      long_term/         # Long-term memory storage (placeholder)
+      long_term/         # Long-term memory storage (Phase 4)
+        themes/
+        narratives/
+        styles/
+        user_preferences/
+        creative_history/
+        motifs/
     rag/
       __init__.py
-      ingest.py          # Document ingestion (placeholder)
-      embed.py           # Text embedding (placeholder)
-      query.py           # Knowledge retrieval (placeholder)
+      ingest.py          # Document ingestion (Phase 4)
+      embed.py           # Text embedding (Phase 4)
+      query.py           # Knowledge retrieval (Phase 4)
     logs/
   tests/
     conftest.py
@@ -92,6 +118,7 @@ lyra/
     test_health.py
     test_tools.py        # Tool-specific tests
     test_brain.py        # Brain/reasoning tests
+    test_memory.py       # Memory/RAG tests (Phase 4)
   README.md
   requirements.txt
 ```
@@ -114,6 +141,11 @@ lyra/
    LYRA_HOST=0.0.0.0
    LYRA_PORT=8000
    LYRA_DEBUG=false
+
+   # Phase 4: Embedding configuration
+   LYRA_EMBEDDING_MODEL=nomic-embed-text
+   LYRA_EMBEDDING_ENDPOINT=http://localhost:11434/api/embeddings
+   LYRA_EMBEDDING_TIMEOUT=30.0
    ```
 
 ## Running the Server
@@ -147,8 +179,8 @@ Get the current status of the Lyra agent.
 }
 ```
 
-### POST /creative_brain (Phase 3)
-Execute a creative task through the reasoning brain.
+### POST /creative_brain
+Execute a creative task through the reasoning brain (with memory retrieval).
 
 **Request:**
 ```json
@@ -168,15 +200,134 @@ Execute a creative task through the reasoning brain.
     "summary": "Synthesized output for idea_generation",
     "primary_insights": ["divergence", "convergence"],
     "options": [...],
-    "distilled": {...}
+    "distilled": {...},
+    "memory_context": {
+      "items_found": 3,
+      "categories": ["themes", "creative_history", "motifs"]
+    }
   },
   "steps": [
     {"stage": "interpretation", "data": {...}},
     {"stage": "objective_classification", "data": {...}},
+    {"stage": "memory_retrieval", "data": {...}},
     {"stage": "tool_plan", "data": {...}},
     {"stage": "tool_execution", "data": {...}},
     {"stage": "synthesis", "data": {...}}
   ]
+}
+```
+
+### POST /memory/ingest (Phase 4)
+Ingest creative snippets into long-term memory.
+
+**Request:**
+```json
+{
+  "items": [
+    {
+      "text": "The hero's journey begins in darkness",
+      "category": "narratives",
+      "metadata": {"source": "workshop"}
+    },
+    {
+      "text": "Transformation through adversity",
+      "category": "themes",
+      "metadata": {}
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "ingested_count": 2,
+  "results": [
+    {
+      "id": "uuid-1",
+      "category": "narratives",
+      "status": "ingested",
+      "timestamp": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid-2",
+      "category": "themes",
+      "status": "ingested",
+      "timestamp": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### POST /memory/preview (Phase 4)
+Query and preview items from long-term memory.
+
+**Semantic Search:**
+```json
+{
+  "query": "hero journey narrative",
+  "top_k": 5
+}
+```
+
+**Category Filter:**
+```json
+{
+  "category": "themes",
+  "top_k": 10
+}
+```
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "uuid-1",
+      "text": "The hero's journey begins in darkness",
+      "category": "narratives",
+      "similarity": 0.87,
+      "metadata": {"source": "workshop"}
+    }
+  ],
+  "count": 1,
+  "query": "hero journey narrative",
+  "category": null
+}
+```
+
+### GET /memory/stats (Phase 4)
+Get memory statistics.
+
+**Response:**
+```json
+{
+  "categories": {
+    "themes": 5,
+    "narratives": 3,
+    "styles": 2,
+    "motifs": 1
+  },
+  "total_items": 11,
+  "valid_categories": ["themes", "narratives", "styles", "user_preferences", "creative_history", "motifs"]
+}
+```
+
+### GET /memory/categories (Phase 4)
+List valid memory categories with descriptions.
+
+**Response:**
+```json
+{
+  "categories": ["themes", "narratives", "styles", "user_preferences", "creative_history", "motifs"],
+  "descriptions": {
+    "themes": "Core themes and concepts explored",
+    "narratives": "Narrative structures and story elements",
+    "styles": "Creative styles and approaches",
+    "user_preferences": "User-specific preferences and patterns",
+    "creative_history": "History of creative outputs",
+    "motifs": "Recurring motifs and patterns"
+  }
 }
 ```
 
@@ -201,86 +352,6 @@ Execute a task through the Lyra agent.
   "payload": {
     "tool": "divergence",
     "args": {"prompt": "sustainable urban development"}
-  }
-}
-```
-
-### Creative Brain Examples
-
-#### Idea Generation
-```json
-{
-  "task_type": "idea_generation",
-  "prompt": "remote work productivity"
-}
-```
-
-#### Narrative Design
-```json
-{
-  "task_type": "narrative_design",
-  "prompt": "digital transformation",
-  "context": {"structure": "hero_journey"}
-}
-```
-
-#### Counterfactual Analysis
-```json
-{
-  "task_type": "counterfactual_analysis",
-  "prompt": "Company adopts AI-first strategy"
-}
-```
-
-#### Analogy Exploration
-```json
-{
-  "task_type": "analogy_exploration",
-  "prompt": "organizational change management"
-}
-```
-
-#### Tone Mapping
-```json
-{
-  "task_type": "tone_mapping",
-  "prompt": "strategic technical implementation"
-}
-```
-
-#### Mixed Creative (Full Pipeline)
-```json
-{
-  "task_type": "mixed_creative",
-  "prompt": "future of sustainable cities"
-}
-```
-
-### Tool Invocation Examples
-
-#### Divergence Tool
-```json
-{
-  "task": "use_tool",
-  "payload": {
-    "tool": "divergence",
-    "args": {"prompt": "remote work productivity"}
-  }
-}
-```
-
-#### Convergence Tool
-```json
-{
-  "task": "use_tool",
-  "payload": {
-    "tool": "convergence",
-    "args": {
-      "options": [
-        {"angle": "A", "description": "First perspective"},
-        {"angle": "B", "description": "Second perspective"}
-      ]
-    }
   }
 }
 ```
@@ -324,7 +395,10 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_brain.py
+pytest tests/test_memory.py
+
+# Run memory tests only
+pytest tests/test_memory.py -v
 
 # Run brain tests only
 pytest tests/test_brain.py -v
@@ -369,22 +443,34 @@ Maps conceptual tones (NOT emotional inference):
 - abstract, grounded, technical
 - whimsical, strategic, narrative
 
+## Embedding Service
+
+Phase 4 uses an HTTP embedding service (Ollama-compatible by default).
+
+**Default Configuration:**
+- Model: `nomic-embed-text`
+- Endpoint: `http://localhost:11434/api/embeddings`
+- Timeout: 30 seconds
+
+**Fallback:**
+When the embedding service is unavailable, a deterministic hash-based pseudo-embedding is used to prevent system crashes.
+
 ## Expected Future Phases
 
-### Phase 4 - RAG Integration
-- Document ingestion pipeline
-- Text embedding system
-- Knowledge retrieval and querying
+### Phase 5 - Congress Integration
+- Voting mechanisms
+- Contribution tracking
+- Bill analysis interface
 
-### Phase 5 - Memory and Context
-- Short-term memory implementation
-- Long-term memory storage
-- Context management
-
-### Phase 6 - Congress Interface
-- Multi-agent collaboration
+### Phase 6 - Sky Protocol
+- Message passing framework
 - Event-driven communication
 - Coordination with Sky orchestrator
+
+### Phase 7 - History Logging
+- Creative history logger
+- Export functionality
+- Audit trail
 
 ## License
 

@@ -23,13 +23,14 @@ from app.tools.narratives import NarrativeTool
 from app.tools.counterfactuals import CounterfactualTool
 from app.tools.tone_map import ToneMapper
 from app.services.lyra_brain import LyraBrain
+from app.services.memory_manager import LyraMemoryManager
 
 
 class LyraAgent:
     """
     Lyra Agent - Creative strategist and conceptual reframing agent.
 
-    Phase 3: Structured reasoning with LyraBrain integration.
+    Phase 4: RAG + Memory integration.
     Available tools:
         - divergence: Generate divergent conceptual angles
         - convergence: Distill options into core insights
@@ -47,8 +48,11 @@ class LyraAgent:
         - tone_mapping
         - mixed_creative
 
+    Memory categories:
+        - themes, narratives, styles
+        - user_preferences, creative_history, motifs
+
     Future phases will implement:
-        - RAG-based knowledge retrieval
         - Congress interface for multi-agent collaboration
 
     GUARDRAILS:
@@ -72,7 +76,7 @@ class LyraAgent:
 
     def __init__(self, settings):
         """
-        Initialize the Lyra agent with all creative tools and brain.
+        Initialize the Lyra agent with all creative tools, brain, and memory.
 
         Args:
             settings: Application settings instance
@@ -87,7 +91,10 @@ class LyraAgent:
         self.counterfactuals = CounterfactualTool()
         self.tonemap = ToneMapper()
 
-        # Phase 3: Initialize the reasoning brain with tool access
+        # Phase 4: Initialize memory manager
+        self.memory = LyraMemoryManager()
+
+        # Phase 4: Initialize the reasoning brain with tool access and memory
         self.brain = LyraBrain(
             tools={
                 "divergence": self.divergence,
@@ -96,10 +103,14 @@ class LyraAgent:
                 "narratives": self.narratives,
                 "counterfactuals": self.counterfactuals,
                 "tonemap": self.tonemap,
-            }
+            },
+            memory=self.memory,
         )
 
-        logger.info(f"LyraAgent initialized (v{settings.VERSION}) with creative tools and brain")
+        logger.info(
+            f"LyraAgent initialized (v{settings.VERSION}) "
+            f"with creative tools, brain, and memory"
+        )
 
     def run_task(self, task: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -130,11 +141,12 @@ class LyraAgent:
 
         # Default: return task info
         return {
-            "note": "Lyra Phase 3 - use task='creative_brain' or 'use_tool'",
+            "note": "Lyra Phase 4 - use task='creative_brain' or 'use_tool'",
             "task_received": task,
             "payload_keys": list(payload.keys()) if payload else [],
             "available_tools": list(self.TOOL_REGISTRY.keys()),
             "available_task_types": self.brain.get_supported_tasks(),
+            "memory_categories": self.memory.get_valid_categories(),
         }
 
     def run_creative_task(
@@ -249,6 +261,7 @@ class LyraAgent:
             "ok": True,
             "tools_available": list(self.TOOL_REGISTRY.keys()),
             "task_types_available": self.brain.get_supported_tasks(),
+            "memory_stats": self.memory.get_stats(),
         }
 
     def get_available_tools(self) -> Dict[str, str]:
