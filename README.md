@@ -2,11 +2,18 @@
 
 Lyra is a creative strategist and conceptual reframing agent designed to assist with innovative thinking, idea generation, and creative problem-solving within a multi-agent system.
 
-## Current Phase: Phase 4 - RAG + Memory Integration
+## Current Phase: Phase 5 - Congress Integration
 
-This implementation includes Phases 1-3 plus long-term memory with RAG capabilities.
+This implementation includes Phases 1-4 plus Congress integration for multi-agent collaboration.
 
-### Phase 4 Features
+### Phase 5 Features
+
+- **Voting Module**: Cast and track votes on Congress proposals
+- **Contribution Tracker**: Create and submit creative contributions
+- **Bill Interface**: Analyze bills from creative perspective
+- **Domain Guardrails**: Auto-abstain on non-creative domains
+
+### Phase 4 Features (RAG + Memory)
 
 - **File-backed Long-term Memory**: JSON storage under `memory/long_term/`
 - **Text Embeddings**: HTTP client for embedding service (Ollama-compatible)
@@ -81,6 +88,7 @@ lyra/
       __init__.py
       core.py            # Core API endpoints
       memory.py          # Memory API endpoints (Phase 4)
+      congress.py        # Congress API endpoints (Phase 5)
     models/
       __init__.py
       schema.py          # Pydantic request/response models
@@ -97,6 +105,11 @@ lyra/
       narratives.py      # Narrative scaffolding
       counterfactuals.py # What-if scenario analysis
       tone_map.py        # Conceptual tone mapping
+    congress/              # Phase 5: Congress integration
+      __init__.py
+      voting.py          # Voting module
+      contributions.py   # Contribution tracker
+      bill_interface.py  # Bill analysis interface
     memory/
       short_term/        # Short-term memory storage (placeholder)
       long_term/         # Long-term memory storage (Phase 4)
@@ -119,6 +132,7 @@ lyra/
     test_tools.py        # Tool-specific tests
     test_brain.py        # Brain/reasoning tests
     test_memory.py       # Memory/RAG tests (Phase 4)
+    test_congress.py     # Congress integration tests (Phase 5)
   README.md
   requirements.txt
 ```
@@ -331,6 +345,103 @@ List valid memory categories with descriptions.
 }
 ```
 
+### POST /congress/vote (Phase 5)
+Cast a vote on a Congress proposal.
+
+**Request:**
+```json
+{
+  "proposal_id": "prop-123",
+  "vote": "approve",
+  "domain": "creative",
+  "rationale": {"reason": "Strong creative merit"}
+}
+```
+
+**Response:**
+```json
+{
+  "vote_id": "uuid",
+  "proposal_id": "prop-123",
+  "vote": "approve",
+  "domain": "creative",
+  "agent": "Lyra",
+  "valid": true
+}
+```
+
+Note: Lyra auto-abstains on restricted domains (legal, security, compute, health).
+
+### POST /congress/evaluate (Phase 5)
+Evaluate a proposal from creative perspective.
+
+**Request:**
+```json
+{
+  "proposal_id": "prop-123",
+  "proposal_content": "An innovative creative strategy",
+  "domain": "creative"
+}
+```
+
+**Response:**
+```json
+{
+  "proposal_id": "prop-123",
+  "evaluable": true,
+  "assessment": {
+    "creative_merit": "strong",
+    "narrative_coherence": "moderate",
+    "strategic_alignment": "strong"
+  },
+  "suggested_vote": "approve"
+}
+```
+
+### POST /congress/bill/analyze (Phase 5)
+Analyze a bill from creative perspective.
+
+**Request:**
+```json
+{
+  "bill_id": "bill-123",
+  "title": "Innovation Act",
+  "content": "Proposal for creative innovation",
+  "domain": "creative"
+}
+```
+
+**Response:**
+```json
+{
+  "analysis_id": "uuid",
+  "bill_id": "bill-123",
+  "analyzable": true,
+  "creative_assessment": {"score": 0.75},
+  "narrative_assessment": {"score": 0.65},
+  "strategic_assessment": {"score": 0.80},
+  "overall_score": 0.73,
+  "suggestions": ["Consider strengthening narrative structure"]
+}
+```
+
+### GET /congress/status (Phase 5)
+Get Congress participation status.
+
+**Response:**
+```json
+{
+  "agent": "Lyra",
+  "congress_active": true,
+  "voting": {"total_votes": 10, "approval_rate": 0.6},
+  "contributions": {"total_contributions": 5},
+  "guardrails": {
+    "restricted_domains": ["legal", "security", "compute", "health"],
+    "allowed_domains": ["creative", "narrative", "strategic"]
+  }
+}
+```
+
 ### POST /run_task
 Execute a task through the Lyra agent.
 
@@ -395,7 +506,10 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_memory.py
+pytest tests/test_congress.py
+
+# Run Congress tests only
+pytest tests/test_congress.py -v
 
 # Run memory tests only
 pytest tests/test_memory.py -v
@@ -456,11 +570,6 @@ Phase 4 uses an HTTP embedding service (Ollama-compatible by default).
 When the embedding service is unavailable, a deterministic hash-based pseudo-embedding is used to prevent system crashes.
 
 ## Expected Future Phases
-
-### Phase 5 - Congress Integration
-- Voting mechanisms
-- Contribution tracking
-- Bill analysis interface
 
 ### Phase 6 - Sky Protocol
 - Message passing framework
